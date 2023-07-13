@@ -15,7 +15,6 @@ def GetLasyData():
                 if id_name[j]:
                     ids.append((id_name[j], int(df.loc[i, "QQ号"]), df.loc[i, "群昵称"]))
                     break
-
     qqlist = []
     nostudy = set()
     for id, qq, name in ids:
