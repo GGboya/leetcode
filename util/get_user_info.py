@@ -1,6 +1,5 @@
 import http.client
 import json
-
 def GetLastSubmissionTime(ip):
     conn = http.client.HTTPSConnection("leetcode.cn")
     payload = json.dumps({
@@ -9,6 +8,24 @@ def GetLastSubmissionTime(ip):
             "userSlug": ip
         }
     })
+
+    payload_rank = json.dumps({
+        "query":
+            "\n    query userContestRankingInfo($userSlug: String!) {\n  userContestRanking(userSlug: $userSlug) {\n    attendedContestsCount\n    rating\n    globalRanking\n    localRanking\n    globalTotalParticipants\n    localTotalParticipants\n    topPercentage\n  }\n  userContestRankingHistory(userSlug: $userSlug) {\n    attended\n    totalProblems\n    trendingDirection\n    finishTimeInSeconds\n    rating\n    score\n    ranking\n    contest {\n      title\n      titleCn\n      startTime\n    }\n  }\n}\n    ",
+        "variables": {
+            "userSlug": ip
+        }
+    })
+
+    payload_solve = json.dumps({
+        "query":
+            "\n    query userQuestionProgress($userSlug: String!) {\n  userProfileUserQuestionProgress(userSlug: $userSlug) {\n    numAcceptedQuestions {\n      difficulty\n      count\n    }\n    numFailedQuestions {\n      difficulty\n      count\n    }\n    numUntouchedQuestions {\n      difficulty\n      count\n    }\n  }\n}\n    ",
+        "variables": {
+            "userSlug": ip
+        }
+    })
+
+
     headers = {
         'authority': 'leetcode.cn',
         'authorization': '',
@@ -17,12 +34,43 @@ def GetLastSubmissionTime(ip):
         'User-Agent': 'apifox/1.0.0 (https://www.apifox.cn)',
         'content-type': 'application/json'
     }
+
+    conn.request("POST", "/graphql/noj-go/", payload_rank, headers)
+    res = conn.getresponse()
+    data = res.read()
+    dictStr = json.loads(data.decode("utf-8"))
+    try:
+        user_rank = int(dictStr["data"]["userContestRanking"]["rating"])
+    except (IndexError, TypeError):
+        user_rank = -1
+
     conn.request("POST", "/graphql/noj-go/", payload, headers)
     res = conn.getresponse()
     data = res.read()
     s = data.decode("utf-8")
     idx = s.find("submitTime")
     if idx == -1:
-        return -1
+        return -1, user_rank, 0
     last_time = int(s[idx + 12: idx + 22])
-    return last_time
+
+    conn.request("POST", "/graphql/", payload_solve, headers)
+    res = conn.getresponse()
+    data = res.read()
+    dictStr = json.loads(data.decode("utf-8"))
+    try:
+        user_solve_easy = int(dictStr["data"]["userProfileUserQuestionProgress"]["numAcceptedQuestions"][0]["count"])
+    except IndexError:
+        user_solve_easy = 0
+    try:
+        user_solve_medi = int(dictStr["data"]["userProfileUserQuestionProgress"]["numAcceptedQuestions"][1]["count"])
+    except IndexError:
+        user_solve_medi = 0
+    try:
+        user_solve_hard = int(dictStr["data"]["userProfileUserQuestionProgress"]["numAcceptedQuestions"][2]["count"])
+    except IndexError:
+        user_solve_hard = 0
+
+    cnt = user_solve_easy+user_solve_hard+user_solve_medi
+
+
+    return last_time, user_rank, cnt
