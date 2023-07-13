@@ -29,13 +29,13 @@ def main(x):
 if __name__ == "__main__":
 
     # 创建一个调度器对象，并设置为阻塞模式
-    main(2)
-    scheduler = BlockingScheduler()
-
-    # 添加任务和触发器到调度器
-    scheduler.add_job(main, "interval", hours=3, args=[1]) # 更新status
-    scheduler.add_job(main, 'cron', hour=22, minute=30, args=[2])       # 更新level,title,status,ac_count, yesterday_count
-    scheduler.add_job(main, 'cron', day_of_week='sun', hour=22, minute=30, args=[3])      # 全量更新
-
-    # 启动调度器
-    scheduler.start()
+    main(1)
+    # scheduler = BlockingScheduler()
+    #
+    # # 添加任务和触发器到调度器
+    # scheduler.add_job(main, "interval", hours=3, args=[1]) # 更新status
+    # scheduler.add_job(main, 'cron', hour=22, minute=30, args=[2])       # 更新level,title,status,ac_count, yesterday_count
+    # scheduler.add_job(main, 'cron', day_of_week='sun', hour=22, minute=30, args=[3])      # 全量更新
+    #
+    # # 启动调度器
+    # scheduler.start()

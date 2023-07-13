@@ -3,6 +3,13 @@ import dao.crud
 def update(qqlist, cursor, dic, mode, nostudy, ip):
     i = 0
     for qq, score, cur_ac_cnt, name in qqlist:
+        # 如果是温柔榜强者，就不要执行title和level的变化
+        isStrongUser = False
+        cursor.execute("SELECT * FROM strong_user WHERE qq = %s", (qq,))
+        query = cursor.fetchone()
+        if query:
+            isStrongUser = True  # 代表是强者，不参与title和level的更新
+
         row = dao.crud.Retrieve(cursor, qq)
         if row: # 数据库有对应记录，那么就去更新对应的
 
@@ -14,24 +21,34 @@ def update(qqlist, cursor, dic, mode, nostudy, ip):
                 level += 1
             if mode == 1:
                 # 每4个小时，更新一下刷题状态和刷题数量其余字段不更新
-                cursor.execute("UPDATE user SET status = %s, ac_count = %s where qq = %s)", (status, cur_ac_cnt, qq))
+                cursor.execute("UPDATE user SET status = %s, ac_count = %s where qq = %s", (status, cur_ac_cnt, qq))
                 continue
 
             title = dic[level]
             if mode == 2:
                 # 每天10点半，更新level, title, score, status, homepage, username, ac_count, yesterday_count
-                cursor.execute("UPDATE user SET level = %s, title = %s, score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s   WHERE qq = %s",
-                               (level, title, score, status, ip[i], name, cur_ac_cnt, ac_count, qq))
+                if isStrongUser:
+                    cursor.execute(
+                        "UPDATE user SET score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s   WHERE qq = %s",
+                        (score, status, ip[i], name, cur_ac_cnt, ac_count, qq))
+                else:
+                    cursor.execute("UPDATE user SET level = %s, title = %s, score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s   WHERE qq = %s",
+                                   (level, title, score, status, ip[i], name, cur_ac_cnt, ac_count, qq))
                 continue
 
             if mode == 3:
                 # 每周22：30， 更新所有字段
-                cursor.execute(
-                    "UPDATE user SET level = %s, title = %s, score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s, last_week_count = %s WHERE qq = %s",
-                    (level, title, score, status, ip[i], name, cur_ac_cnt, ac_count, cur_ac_cnt, qq))
+                if isStrongUser:
+                    cursor.execute(
+                        "UPDATE user SET score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s, last_week_count = %s WHERE qq = %s",
+                        (score, status, ip[i], name, cur_ac_cnt, ac_count, cur_ac_cnt, qq))
+                else:
+                    cursor.execute(
+                        "UPDATE user SET level = %s, title = %s, score = %s, status = %s, homepage = %s, username = %s, ac_count = %s, yesterday_count = %s, last_week_count = %s WHERE qq = %s",
+                        (level, title, score, status, ip[i], name, cur_ac_cnt, ac_count, cur_ac_cnt, qq))
         else:
             # 如果QQ号不存在，则插入一条新记录
-            dao.crud.insert(cursor, qq, score, status)
+            cursor.execute("INSERT INTO user (qq, level, title, score, status) VALUES (%s, %s, %s,%s,%s)", (qq, 100, "温柔榜强者", score, status))
 
         i += 1
 
