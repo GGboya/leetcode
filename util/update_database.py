@@ -22,7 +22,8 @@ def update(qqlist, cursor, dic, mode, nostudy, ip):
                 level += 1
             if mode == 1:
                 # 每4个小时，更新一下刷题状态和刷题数量其余字段不更新
-                cursor.execute("UPDATE users SET status = %s, ac_count = %s where qq = %s", (status, cur_ac_cnt, qq))
+                print(ip[i], name)
+                cursor.execute("UPDATE users SET status = %s, ac_count = %s, username = %s, homepage=%s where qq = %s", (status, cur_ac_cnt, name,ip[i],qq))
                 continue
 
             title = dic[level]

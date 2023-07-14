@@ -25,6 +25,13 @@ def GetLastSubmissionTime(ip):
         }
     })
 
+    payload_user = json.dumps({
+        "query": "\n    query userProfilePublicProfile($userSlug: String!) {\n  userProfilePublicProfile(userSlug: $userSlug) {\n    haveFollowed\n    siteRanking\n    profile {\n      userSlug\n      realName\n      aboutMe\n      asciiCode\n      userAvatar\n      gender\n      websites\n      skillTags\n      ipRegion\n      birthday\n      location\n      useDefaultAvatar\n      github\n      school: schoolV2 {\n        schoolId\n        logo\n        name\n      }\n      company: companyV2 {\n        id\n        logo\n        name\n      }\n      job\n      globalLocation {\n        country\n        province\n        city\n        overseasCity\n      }\n      socialAccounts {\n        provider\n        profileUrl\n      }\n      skillSet {\n        langLevels {\n          langName\n          langVerboseName\n          level\n        }\n        topics {\n          slug\n          name\n          translatedName\n        }\n        topicAreaScores {\n          score\n          topicArea {\n            name\n            slug\n          }\n        }\n      }\n    }\n    educationRecordList {\n      unverifiedOrganizationName\n    }\n    occupationRecordList {\n      unverifiedOrganizationName\n      jobTitle\n    }\n  }\n}\n    ",
+        "variables": {
+            "userSlug": ip
+        }
+    })
+
 
     headers = {
         'authority': 'leetcode.cn',
@@ -50,7 +57,7 @@ def GetLastSubmissionTime(ip):
     s = data.decode("utf-8")
     idx = s.find("submitTime")
     if idx == -1:
-        return -1, user_rank, 0
+        return -1, user_rank, 0, 0
     last_time = int(s[idx + 12: idx + 22])
 
     conn.request("POST", "/graphql/", payload_solve, headers)
@@ -72,5 +79,10 @@ def GetLastSubmissionTime(ip):
 
     cnt = user_solve_easy+user_solve_hard+user_solve_medi
 
+    conn.request("POST", "/graphql/", payload_user, headers)
+    res = conn.getresponse()
+    data = res.read()
+    dictStr = json.loads(data.decode("utf-8"))
+    username = dictStr['data']['userProfilePublicProfile']['profile']['realName']
 
-    return last_time, user_rank, cnt
+    return last_time, user_rank, cnt, username
