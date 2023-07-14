@@ -50,6 +50,6 @@ def update(qqlist, cursor, dic, mode, nostudy, ip):
                         (level, title, score, status, ip[i], name, cur_ac_cnt, ac_count, cur_ac_cnt, qq))
         else:
             # 如果QQ号不存在，则插入一条新记录
-            cursor.execute("INSERT INTO users (qq, level, title, score, status) VALUES (%s, %s, %s,%s,%s)", (qq, 100, "温柔榜强者", score, status))
+            cursor.execute("INSERT INTO users (qq, level, title, score, status) VALUES (%s, %s, %s,%s,%s)", (qq, -100, "温柔榜强者", score, status))
 
 
